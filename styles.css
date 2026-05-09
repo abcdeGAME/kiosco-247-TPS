@@ -1,0 +1,511 @@
+/* ==========================================
+
+   MÓDULO: RESET ARQUITECTÓNICO Y VARIABLES GLOBALES
+
+   ========================================== */
+
+
+
+/* El selector universal (*) aplica a todos los nodos del DOM */
+
+* {
+
+    margin: 0;
+
+    padding: 0;
+
+    box-sizing: border-box; /* Obliga a que el padding no expanda el tamaño de las cajas */
+
+}
+
+
+
+/* Variables de Entorno (Design Tokens) */
+
+:root {
+
+    --color-fondo: #f4f4f9;
+
+    --color-superficie: #ffffff;
+
+    --color-texto-principal: #333333;
+
+    --color-accion: #2ecc71; /* Un verde indicativo de transacción comercial */
+
+    --color-peligro: #e74c3c;
+
+    
+
+    --espaciado-base: 1rem; /* 16px por defecto */
+
+    --radio-borde: 8px;
+
+}
+
+
+
+/* Tipografía y Fondo Base */
+
+body {
+
+    font-family: system-ui, -apple-system, sans-serif;
+
+    background-color: var(--color-fondo);
+
+    color: var(--color-texto-principal);
+
+    line-height: 1.5;
+
+}
+
+
+
+/* ==========================================
+
+   MÓDULO: MACRO-ARQUITECTURA (Grid & Flexbox)
+
+   ========================================== */
+
+
+
+/* 1. Límite del Sistema (Contenedor Principal) */
+
+.takeaway-app-container {
+
+    max-width: 1200px; /* Evita que el sistema se deforme en monitores ultra anchos */
+
+    margin: 0 auto; /* Centra el contenedor en el eje X */
+
+    padding: var(--espaciado-base);
+
+}
+
+
+
+/* 2. Cabecera (Vector Unidimensional) */
+
+.app-header nav {
+
+    display: flex;
+
+    justify-content: space-between; /* Empuja el título a la izquierda y el contador a la derecha */
+
+    align-items: center;
+
+    padding-bottom: var(--espaciado-base);
+
+    border-bottom: 2px solid #ddd;
+
+    margin-bottom: calc(var(--espaciado-base) * 2);
+
+}
+
+
+
+/* 3. Lógica de Dominio (Matriz Bidimensional Principal) */
+
+.app-main {
+
+    display: grid;
+
+    /* Dividimos la pantalla: 2 fracciones para el catálogo, 1 fracción para el carrito */
+
+    grid-template-columns: 2fr 1fr;
+
+    gap: calc(var(--espaciado-base) * 2); /* Margen de seguridad entre columnas */
+
+    align-items: start; /* Evita que el panel lateral se estire innecesariamente hacia abajo */
+
+}
+
+
+
+/* 4. Grilla del Catálogo de Productos (Sub-matriz dinámica) */
+
+.catalog-grid {
+
+    display: grid;
+
+    /* Algoritmo predictivo: Crea tantas columnas de 250px como quepan en la pantalla */
+
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+
+    gap: var(--espaciado-base);
+
+}
+
+
+
+/* ==========================================
+
+   MÓDULO: MICRO-ARQUITECTURA (Encapsulamiento de Nodos)
+
+   ========================================== */
+
+
+
+/* 1. Entidad: Nodo de Producto (Catálogo) */
+
+.product-node {
+
+    background-color: var(--color-superficie);
+
+    border: 1px solid #e0e0e0;
+
+    border-radius: var(--radio-borde);
+
+    padding: var(--espaciado-base);
+
+    
+
+    /* Usamos Flexbox en modo columna para empujar el botón siempre hacia abajo */
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    
+
+    /* Transición suave para feedback de interacción */
+
+    transition: transform 0.2s, box-shadow 0.2s;
+
+}
+
+
+
+/* Efecto Hover: Elevación del nodo al pasar el mouse */
+
+.product-node:hover {
+
+    transform: translateY(-4px);
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+}
+
+
+
+.product-description {
+
+    color: #666;
+
+    font-size: 0.9rem;
+
+    margin: 0.5rem 0 1rem 0;
+
+    flex-grow: 1; /* Permite que la descripción ocupe el espacio disponible */
+
+}
+
+
+
+/* Acciones del Producto (Precio y Botón) */
+
+.product-actions {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    border-top: 1px solid #eee;
+
+    padding-top: 0.8rem;
+
+}
+
+
+
+.product-price {
+
+    font-weight: bold;
+
+    font-size: 1.2rem;
+
+    color: var(--color-texto-principal);
+
+}
+
+
+
+/* 2. Entidad: Panel de Estado (Carrito de Compras) */
+
+.shopping-cart-panel {
+
+    background-color: var(--color-superficie);
+
+    border: 2px solid var(--color-accion); /* Resaltamos el límite transaccional */
+
+    border-radius: var(--radio-borde);
+
+    padding: var(--espaciado-base);
+
+    
+
+    /* Posicionamiento Estratégico: El panel "persigue" al Actor al hacer scroll */
+
+    position: sticky;
+
+    top: var(--espaciado-base);
+
+}
+
+
+
+/* Lista Dinámica de Transacciones */
+
+.cart-item-list {
+
+    list-style: none; /* Quitamos las viñetas por defecto */
+
+    margin: 1rem 0;
+
+    max-height: 400px;
+
+    overflow-y: auto; /* Si hay muchos ítems, el carrito tendrá su propio scroll interno */
+
+}
+
+
+
+/* Nodo Individual del Carrito */
+
+.cart-item-node {
+
+    display: grid;
+
+    grid-template-columns: 2fr 1fr 1fr auto; /* Matriz de 4 columnas para alinear los datos */
+
+    align-items: center;
+
+    gap: 0.5rem;
+
+    padding: 0.5rem 0;
+
+    border-bottom: 1px dashed #ccc;
+
+    font-size: 0.9rem;
+
+}
+
+
+
+.item-quantity-controls {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 0.5rem;
+
+}
+
+
+
+/* 3. Componentes de Interacción (Botones Universales) */
+
+button {
+
+    font-family: inherit;
+
+    cursor: pointer;
+
+    border: none;
+
+    border-radius: 4px;
+
+    transition: opacity 0.2s;
+
+}
+
+
+
+button:hover {
+
+    opacity: 0.8;
+
+}
+
+
+
+.btn-add-to-cart {
+
+    background-color: var(--color-accion);
+
+    color: white;
+
+    padding: 0.5rem 1rem;
+
+    font-weight: bold;
+
+}
+
+
+
+.btn-checkout {
+
+    background-color: var(--color-texto-principal);
+
+    color: white;
+
+    width: 100%;
+
+    padding: 1rem;
+
+    font-size: 1.1rem;
+
+    margin-top: 1rem;
+
+}
+
+
+
+/* Estado de Bloqueo Lógico (Disabled) */
+
+.btn-checkout:disabled {
+
+    background-color: #ccc;
+
+    cursor: not-allowed;
+
+}
+
+
+
+.btn-increase, .btn-decrease, .btn-remove-node {
+
+    background-color: #eee;
+
+    padding: 0.2rem 0.5rem;
+
+    border-radius: 4px;
+
+}
+
+
+
+.btn-remove-node {
+
+    background-color: var(--color-peligro);
+
+    color: white;
+
+}
+
+
+
+/* Resolución del Caso de Uso (Totalizador) */
+
+.cart-summary {
+
+    border-top: 2px solid #eee;
+
+    padding-top: 1rem;
+
+}
+
+
+
+.cart-total-display {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    font-size: 1.2rem;
+
+    font-weight: bold;
+
+}
+
+
+
+/* ==========================================
+
+   MÓDULO: RESPONSIVIDAD Y ADAPTACIÓN MÓVIL
+
+   ========================================== */
+
+
+
+/* 
+
+   Variable de Entorno: max-width: 768px
+
+   Esta condición evalúa si el ancho del Límite del Sistema es menor o igual a 768px.
+
+*/
+
+ @media (max-width: 768px) {
+
+    
+
+    /* 1. Colapso de la Macro-Arquitectura */
+
+    .app-main {
+
+        /* Transformamos la matriz bidimensional en un vector vertical (1 sola columna) */
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+
+    /* 2. Alteración del Flujo de Datos (Visual) */
+
+    .shopping-cart-panel {
+
+        /* En un móvil, es vital que el usuario vea su carrito sin hacer scroll hasta el final.
+
+           El atributo 'order' altera la posición en la matriz sin modificar el HTML semántico.
+
+           Al asignarle -1, lo forzamos a renderizarse ANTES que el catálogo. */
+
+        order: -1; 
+
+        
+
+        /* Liberamos la posición 'sticky' para evitar que un carrito lleno bloquee 
+
+           toda la pantalla del móvil, devolviéndolo al flujo normal (static). */
+
+        position: static; 
+
+        margin-bottom: calc(var(--espaciado-base) * 2);
+
+    }
+
+
+
+    /* 3. Reestructuración de la Cabecera */
+
+    .app-header nav {
+
+        /* Cambiamos el vector horizontal a vertical para evitar que el texto choque */
+
+        flex-direction: column;
+
+        gap: 1rem;
+
+        text-align: center;
+
+    }
+
+
+
+    /* 4. Optimización de Botones para Interfaces Táctiles */
+
+    .btn-add-to-cart {
+
+        /* Aumentamos el área de impacto (Hitbox) para los dedos */
+
+        padding: 0.8rem 1rem; 
+
+    }
+
+}

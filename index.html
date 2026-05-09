@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Kiosco 24/7 - Open Design</title>
+
+    <!-- VINCULACIÓN DE LA CAPA DE PRESENTACIÓN -->
+
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+
+    <!-- LÍMITE DEL SISTEMA -->
+    <div class="takeaway-app-container">
+
+      <!-- CABECERA: Estado Global -->
+      <header class="app-header">
+        <nav>
+          <h1>Sistema Take Away</h1>
+          <div class="global-status">
+            <span>Ítems en pedido: <output id="cart-counter">0</output></span>
+          </div>
+        </nav>
+      </header>
+
+      <!-- CONTENIDO PRINCIPAL: Lógica de Dominio -->
+      <main class="app-main">
+        
+        <!-- MÓDULO A: Catálogo de Productos -->
+        <section class="product-catalog" aria-labelledby="catalog-title">
+          <h2 id="catalog-title">Menú Disponible</h2>
+          <!-- El contenedor inicia vacío, el controlador lo llenará -->
+          <div class="catalog-grid"></div>
+        </section>
+
+        <!-- MÓDULO B: Estado Persistente (Carrito) -->
+        <aside class="shopping-cart-panel" aria-labelledby="cart-title">
+          <h2 id="cart-title">Tu Pedido Actual</h2>
+          
+          <!-- Lista Dinámica vacía por defecto -->
+          <ul class="cart-item-list"></ul>
+
+          <!-- RESOLUCIÓN DEL CASO DE USO -->
+          <footer class="cart-summary">
+            <div class="cart-total-display">
+              <span>Total a Pagar: </span>
+              <data class="cart-total-value" value="0">$0</data>
+            </div>
+            <button type="button" class="btn-checkout" disabled>
+              Confirmar Pedido
+            </button>
+          </footer>
+        </aside>
+
+      </main>
+    </div>
+
+    <!-- VINCULACIÓN DEL CONTROLADOR -->
+    <script src="app.js"></script>
+
+</body>
+</html>
