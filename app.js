@@ -149,7 +149,7 @@ function setupEventListeners() {
             });
 
             const encodedPayload = encodeURIComponent(orderPayload);
-            window.open(`https://wa.me/5491123456789?text=${encodedPayload}`, '_blank');
+            window.open(`https://wa.me/5493718502710?text=${encodedPayload}`, '_blank');
 
             clearCartState();
             inputName.value = '';
@@ -313,6 +313,13 @@ function evaluateSystemLock() {
     const currentState = getCartState();
     if (currentState.length > 0 && isNameValid) {
         btnCheckout.removeAttribute('disabled');
+    } else {
+        btnCheckout.setAttribute('disabled', 'true');
+    }
+}
+
+// ARRANQUE
+initializeSystem();kout.removeAttribute('disabled');
     } else {
         btnCheckout.setAttribute('disabled', 'true');
     }
