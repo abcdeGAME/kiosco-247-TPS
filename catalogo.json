@@ -1,0 +1,37 @@
+[
+    { 
+        "id": "PROD-K01", 
+        "category": "golosinas",
+        "name": "Alfajor Triple Terrabusi", 
+        "description": "Clásico alfajor de chocolate relleno de abundante dulce de leche.", 
+        "price": 1200 
+    },
+    { 
+        "id": "PROD-K02", 
+        "category": "almacen",
+        "name": "Yerba Mate Playadito 500g", 
+        "description": "Yerba mate suave con palo, paquete de medio kilo.", 
+        "price": 3500 
+    },
+    { 
+        "id": "PROD-K03", 
+        "category": "almacen",
+        "name": "Galletitas Don Satur", 
+        "description": "Bizcochitos clásicos dulces o salados.", 
+        "price": 1500 
+    },
+    { 
+        "id": "PROD-K04", 
+        "category": "bebidas",
+        "name": "Bebida Energizante Speed 250ml", 
+        "description": "Lata de bebida energizante.", 
+        "price": 1800 
+    },
+    { 
+        "id": "PROD-K05", 
+        "category": "varios",
+        "name": "Encendedor Bic Clásico", 
+        "description": "Encendedor a gas de tamaño estándar.", 
+        "price": 900 
+    }
+]

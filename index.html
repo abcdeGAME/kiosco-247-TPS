@@ -38,6 +38,19 @@
         <!-- MÓDULO A: Catálogo de Productos -->
         <section class="product-catalog" aria-labelledby="catalog-title">
           <h2 id="catalog-title">Menú Disponible</h2>
+
+          <!-- MÓDULO DE BÚSQUEDA Y FILTRADO -->
+          <header class="catalog-controls">
+              <input type="search" id="search-engine" placeholder="Buscar productos..." autocomplete="off">
+              
+              <nav class="category-filters">
+                  <button type="button" class="btn-filter active" data-category="all">Todos</button>
+                  <button type="button" class="btn-filter" data-category="golosinas">Golosinas</button>
+                  <button type="button" class="btn-filter" data-category="bebidas">Bebidas</button>
+                  <button type="button" class="btn-filter" data-category="almacen">Almacén</button>
+              </nav>
+          </header>
+
           <!-- El contenedor inicia vacío, el controlador lo llenará -->
           <div class="catalog-grid"></div>
         </section>
@@ -49,23 +62,33 @@
           <!-- Lista Dinámica vacía por defecto -->
           <ul class="cart-item-list"></ul>
 
-          <!-- RESOLUCIÓN DEL CASO DE USO -->
-          <footer class="cart-summary">
+          <!-- MÓDULO DE CAPTURA DE DATOS (Reducido) -->
+          <div class="cart-summary">
             <div class="cart-total-display">
-              <span>Total a Pagar: </span>
-              <data class="cart-total-value" value="0">$0</data>
+                <span>Total:</span>
+                <span class="total-value">$0.00</span>
             </div>
-            <button type="button" class="btn-checkout" disabled>
-              Confirmar Pedido
-            </button>
-          </footer>
+
+            <form id="checkout-form" class="checkout-form-module" autocomplete="off">
+                <div class="input-group">
+                    <label for="actor-name">Identificador (Nombre):</label>
+                    <input type="text" id="actor-name" name="actorName" placeholder="Ej. Juan Pérez" required>
+                    <span class="error-trace" id="error-name"></span>
+                </div>
+                
+                <button type="button" class="btn-checkout" disabled>Confirmar Transacción</button>
+            </form>
+          </div>
         </aside>
 
       </main>
     </div>
 
+    <!-- MÓDULO DE TELEMETRÍA VISUAL (Notificaciones Asíncronas) -->
+    <div id="telemetry-console" class="telemetry-console"></div>
+
     <!-- VINCULACIÓN DEL CONTROLADOR -->
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 
 </body>
 </html>

@@ -1,319 +1,322 @@
-// 1. ESTRUCTURAS DE DATOS EN MEMORIA (Estado - Dominio Kiosco 24/7)
-
-const catalogProducts = [
-
-    { 
-
-        id: "PROD-K01", 
-
-        name: "Alfajor Triple Terrabusi", 
-
-        description: "Clásico alfajor de chocolate relleno de abundante dulce de leche.", 
-
-        price: 1200 
-
-    },
-
-    { 
-
-        id: "PROD-K02", 
-
-        name: "Yerba Mate Playadito 500g", 
-
-        description: "Yerba mate suave con palo, paquete de medio kilo.", 
-
-        price: 3500 
-
-    },
-
-    { 
-
-        id: "PROD-K03", 
-
-        name: "Galletitas Don Satur", 
-
-        description: "Bizcochitos clásicos dulces o salados, el acompañamiento perfecto para el mate.", 
-
-        price: 1500 
-
-    },
-
-    { 
-
-        id: "PROD-K04", 
-
-        name: "Bebida Energizante Speed 250ml", 
-
-        description: "Lata de bebida energizante para mantener la concentración y combatir la fatiga.", 
-
-        price: 1800 
-
-    },
-
-    { 
-
-        id: "PROD-K05", 
-
-        name: "Encendedor Bic Clásico", 
-
-        description: "Encendedor a gas de tamaño estándar, colores surtidos.", 
-
-        price: 900 
-
-    },
-
-    { 
-
-        id: "PROD-K06", 
-
-        name: "Coca-Cola Zero 250ml", 
-
-        description: "Gaseosa refrescante sin azúcar en envase pequeño.", 
-
-        price: 1500 
-
-    },
-
-    { 
-
-        id: "PROD-K07", 
-
-        name: "Coca-Cola Original 250ml", 
-
-        description: "El sabor clásico de Coca-Cola en envase pequeño.", 
-
-        price: 1500 
-
-    },
-
-    { 
-
-        id: "PROD-K08", 
-
-        name: "Chicles Beldent", 
-
-        description: "Chicles sabor menta o frutas para refrescar el aliento.", 
-
-        price: 800 
-
-    },
-
-    { 
-
-        id: "PROD-K09", 
-
-        name: "Cigarrillos Marlboro (12)", 
-
-        description: "Atado de 12 cigarrillos clásicos.", 
-
-        price: 3200 
-
-    },
-
-    { 
-
-        id: "PROD-K10", 
-
-        name: "Preservativos Prime Ultrafino (3)", 
-
-        description: "Caja de 3 unidades de látex ultrafinos para máxima sensibilidad.", 
-
-        price: 2800 
-
-    },
-
-    { 
-
-        id: "PROD-K11", 
-
-        name: "Zyn Nicotine Pouches", 
-
-        description: "Bolsitas de nicotina sin tabaco, diversas variedades.", 
-
-        price: 5500 
-
+// Archivo: app.js
+import { fetchCatalog } from './api.js';
+import { getCartState, loadCartState, saveCartState, clearCartState } from './state.js';
+import { validateInput } from './security.js';
+
+let catalogProducts = [];
+let currentCategory = 'all';
+let currentSearchTerm = '';
+let isNameValid = false;
+
+// 1. BOOTSTRAP DEL SISTEMA
+async function initializeSystem() {
+    try {
+        console.log("Inicializando sistema...");
+        catalogProducts = await fetchCatalog();
+        console.log("Catálogo cargado:", catalogProducts);
+        
+        renderCatalog(catalogProducts);
+        
+        loadCartState(); 
+        syncCartDOM();   
+        
+        setupEventListeners();
+    } catch (error) {
+        console.error("Error crítico al inicializar:", error);
+    }
+}
+
+// 2. RENDERIZADO DEL CATÁLOGO
+function renderCatalog(productsToRender) {
+    const catalogGrid = document.querySelector('.catalog-grid');
+    if (!catalogGrid) {
+        console.error("No se encontró el contenedor .catalog-grid");
+        return;
+    }
+    
+    catalogGrid.innerHTML = '';
+    
+    if (productsToRender.length === 0) {
+        catalogGrid.innerHTML = '<p class="empty-state">No se encontraron productos que coincidan con la búsqueda.</p>';
+        return;
     }
 
-];
-
-
-
-let cartState = [];
-
-// 2. INICIALIZACIÓN (Bootstrap)
-function initializeCatalog() {
-    const catalogGrid = document.querySelector('.catalog-grid');
-    catalogGrid.innerHTML = '';
-    catalogProducts.forEach(product => {
+    productsToRender.forEach(product => {
         const productHTML = `
             <article class="product-node" data-product-id="${product.id}">
               <header><h3 class="product-name">${product.name}</h3></header>
               <div class="product-description"><p>${product.description}</p></div>
               <footer class="product-actions">
                 <data class="product-price" value="${product.price}">$${product.price}</data>
-                <button type="button" class="btn-add-to-cart" aria-label="Agregar ${product.name} al pedido">Agregar al Carrito</button>
+                <button type="button" class="btn-add-to-cart">Agregar al Carrito</button>
               </footer>
             </article>
         `;
         catalogGrid.insertAdjacentHTML('beforeend', productHTML);
     });
-
-    // === NUEVO: RECUPERACIÓN DE ESTADO ===
-    // Intentamos leer el disco duro buscando una sesión previa
-    const savedState = localStorage.getItem('takeaway_cart_state');
-
-    // Si existe información guardada, reconstruimos el autómata
-    if (savedState) {
-        cartState = JSON.parse(savedState); // Deserializamos la cadena de texto a un Arreglo real
-        syncCartDOM(); // Invocamos el transductor para proyectar este estado recuperado en la Vista
-        console.log("Estado previo del autómata restaurado con éxito.");
-    }
 }
-document.addEventListener('DOMContentLoaded', initializeCatalog);
 
-// 3. OBSERVADOR CENTRAL: CATÁLOGO (Agregar al carrito)
-document.querySelector('.catalog-grid').addEventListener('click', function(event) {
-    if (event.target.classList.contains('btn-add-to-cart')) {
-        const productId = event.target.closest('.product-node').getAttribute('data-product-id');
-        mutateCartState(productId);
+function applyFilters() {
+    let filteredData = catalogProducts;
+
+    if (currentCategory !== 'all') {
+        filteredData = filteredData.filter(item => item.category === currentCategory);
     }
-});
 
-function mutateCartState(productId) {
-    const referenceProduct = catalogProducts.find(prod => prod.id === productId);
-    if (!referenceProduct) return;
+    if (currentSearchTerm !== '') {
+        const lowerCaseTerm = currentSearchTerm.toLowerCase();
+        filteredData = filteredData.filter(item => 
+            item.name.toLowerCase().includes(lowerCaseTerm) || 
+            item.description.toLowerCase().includes(lowerCaseTerm)
+        );
+    }
 
-    const existingIndex = cartState.findIndex(item => item.productRef === productId);
-    if (existingIndex !== -1) {
-        cartState[existingIndex].quantity += 1;
-        cartState[existingIndex].subtotal = cartState[existingIndex].quantity * referenceProduct.price;
-    } else {
-        cartState.push({
-            idNode: `ITEM-${Date.now()}`,
-            productRef: productId,
-            name: referenceProduct.name,
-            quantity: 1,
-            subtotal: referenceProduct.price
+    renderCatalog(filteredData);
+}
+
+// 3. EVENT LISTENERS Y LÓGICA DE INTERACCIÓN
+function setupEventListeners() {
+    // OBSERVADOR DE INSERCIÓN (Delegación de Eventos)
+    const catalogGrid = document.querySelector('.catalog-grid');
+    if (catalogGrid) {
+        catalogGrid.addEventListener('click', (e) => {
+            // Verificamos si el clic provino exactamente del botón de agregar
+            if (e.target.classList.contains('btn-add-to-cart')) {
+                // Escalamiento en el árbol DOM para obtener el nodo del producto
+                const productNode = e.target.closest('.product-node');
+                const targetId = productNode.getAttribute('data-product-id');
+                
+                // Disparamos la lógica de transacción
+                processCartInsertion(targetId);
+            }
         });
     }
-    syncCartDOM();
-}
 
-// 4. OBSERVADOR CENTRAL: CARRITO (Mutación Interna)
-document.querySelector('.cart-item-list').addEventListener('click', function(event) {
-    const clickedElement = event.target;
-    const cartItemNode = clickedElement.closest('.cart-item-node');
-    if (!cartItemNode) return; 
+    const searchEngine = document.getElementById('search-engine');
+    if (searchEngine) {
+        searchEngine.addEventListener('input', (e) => {
+            currentSearchTerm = e.target.value;
+            applyFilters();
+        });
+    }
 
-    const transactionId = cartItemNode.getAttribute('data-cart-item-id');
+    const filterButtons = document.querySelectorAll('.btn-filter');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            currentCategory = e.target.getAttribute('data-category');
+            applyFilters();
+        });
+    });
 
-    if (clickedElement.classList.contains('btn-increase')) modifyItemQuantity(transactionId, 1);
-    else if (clickedElement.classList.contains('btn-decrease')) modifyItemQuantity(transactionId, -1);
-    else if (clickedElement.classList.contains('btn-remove-node')) removeTransactionNode(transactionId);
-});
+    const inputName = document.getElementById('actor-name');
+    const errorName = document.getElementById('error-name');
+    if (inputName) {
+        inputName.addEventListener('input', (e) => {
+            const check = validateInput(e.target.value, 'name');
+            isNameValid = check.isValid;
+            
+            if (isNameValid) {
+                inputName.classList.remove('invalid');
+                inputName.classList.add('valid');
+                if (errorName) errorName.textContent = '';
+            } else {
+                inputName.classList.remove('valid');
+                inputName.classList.add('invalid');
+                if (errorName) errorName.textContent = 'Requiere de 3 a 40 caracteres alfabéticos.';
+            }
+            evaluateSystemLock();
+        });
+    }
 
-function modifyItemQuantity(transactionId, delta) {
-    const item = cartState.find(item => item.idNode === transactionId);
-    if (!item) return;
-    const referenceProduct = catalogProducts.find(prod => prod.id === item.productRef);
-    
-    item.quantity += delta;
-    if (item.quantity <= 0) {
-        removeTransactionNode(transactionId);
-    } else {
-        item.subtotal = item.quantity * referenceProduct.price;
-        syncCartDOM();
+    const btnCheckout = document.querySelector('.btn-checkout');
+    if (btnCheckout) {
+        btnCheckout.addEventListener('click', () => {
+            if (!isNameValid) return;
+            const currentState = getCartState();
+            if (currentState.length === 0) return;
+
+            const inputName = document.getElementById('actor-name');
+            const finalName = validateInput(inputName.value, 'name').value;
+
+            let orderPayload = `*NUEVA TRANSACCIÓN - KIOSCO 24/7*\n`;
+            orderPayload += `Identificador: ${finalName}\n`;
+            orderPayload += `--------------------------\n`;
+
+            currentState.forEach(item => {
+                orderPayload += `▪ ${item.quantity}x ${item.name}\n`;
+            });
+
+            const encodedPayload = encodeURIComponent(orderPayload);
+            window.open(`https://wa.me/5491123456789?text=${encodedPayload}`, '_blank');
+
+            clearCartState();
+            inputName.value = '';
+            isNameValid = false;
+            inputName.classList.remove('valid');
+            syncCartDOM(); 
+            evaluateSystemLock(); 
+        });
     }
 }
 
-function removeTransactionNode(transactionId) {
-    cartState = cartState.filter(item => item.idNode !== transactionId);
-    syncCartDOM();
+// MOTOR LÓGICO DE TRANSACCIONES
+function processCartInsertion(productId) {
+    // 1. Extracción de Definición (Base de Conocimiento)
+    const productDefinition = catalogProducts.find(p => p.id === productId);
+    if (!productDefinition) {
+        console.error("Fallo de integridad: Producto no encontrado en el catálogo.");
+        return;
+    }
+
+    // 2. Extracción de Estado (Memoria Transaccional)
+    const currentState = getCartState();
+
+    // 3. Búsqueda Lineal de Colisiones
+    const existingNode = currentState.find(item => item.id === productId);
+
+    if (existingNode) {
+        // Mutación Algebraica (El producto ya existe, incrementamos cantidad)
+        existingNode.quantity += 1;
+    } else {
+        // Instanciación (El producto es nuevo en el carrito)
+        currentState.push({
+            id: productDefinition.id,
+            name: productDefinition.name,
+            price: productDefinition.price,
+            quantity: 1
+        });
+    }
+
+    // 4. Persistencia y Proyección
+    saveCartState(currentState); // Sobrescribimos el LocalStorage a través del módulo
+    syncCartDOM();               // Renderizamos el carrito
+    evaluateSystemLock();        // Auditamos el estado de seguridad OPSEC
+
+    // Gatillo de Telemetría
+    emitTelemetrySignal(`✅ ${productDefinition.name} agregado al sistema.`);
 }
 
-// 5. TRANSDUCTOR: SINCRONIZACIÓN DOM (Single Source of Truth)
+// MOTOR DE TELEMETRÍA VISUAL
+function emitTelemetrySignal(message) {
+    const consoleNode = document.getElementById('telemetry-console');
+    if (!consoleNode) return;
+
+    // Instanciación del nodo físico
+    const signalNode = document.createElement('div');
+    signalNode.className = 'toast-node';
+    signalNode.textContent = message;
+    
+    // Inyección en el DOM
+    consoleNode.appendChild(signalNode);
+    
+    // Autodestrucción asíncrona tras 2500 ms
+    setTimeout(() => {
+        signalNode.remove();
+    }, 2500);
+}
+
+// OBSERVADOR DE MUTACIÓN INVERSA (Delegación en el Panel del Carrito)
+const cartListContainer = document.querySelector('.cart-item-list');
+
+if (cartListContainer) {
+    cartListContainer.addEventListener('click', (e) => {
+        // Guard Clause: Ignoramos clics que no sean sobre botones
+        if (!e.target.matches('button')) return;
+
+        // Extracción de coordenadas
+        const targetId = e.target.getAttribute('data-id');
+        const currentState = getCartState();
+        
+        // Búsqueda del índice exacto en memoria
+        const itemIndex = currentState.findIndex(item => item.id === targetId);
+        if (itemIndex === -1) return; // Anomalía de estado
+
+        // Bifurcación Lógica de la Operación
+        if (e.target.classList.contains('btn-qty-plus')) {
+            // Incremento Algebraico
+            currentState[itemIndex].quantity++;
+            
+        } else if (e.target.classList.contains('btn-qty-minus')) {
+            // Decremento con evaluación de límite inferior
+            if (currentState[itemIndex].quantity > 1) {
+                currentState[itemIndex].quantity--;
+            } else {
+                // Si la cantidad llega a 0, ejecutamos la purga del nodo
+                currentState.splice(itemIndex, 1);
+            }
+            
+        } else if (e.target.classList.contains('btn-remove-item')) {
+            // Purga Absoluta Directa
+            currentState.splice(itemIndex, 1);
+        }
+
+        // Persistencia y recálculo del estado global del sistema
+        saveCartState(currentState);
+        syncCartDOM();
+        evaluateSystemLock();
+    });
+}
+
+// ACTUALIZACIÓN DEL DOM DEL CARRITO (Con Controladores de Mutación)
 function syncCartDOM() {
-    const cartListContainer = document.querySelector('.cart-item-list');
-    cartListContainer.innerHTML = '';
-    let totalItems = 0;
-    let totalPrice = 0;
+    const cartList = document.querySelector('.cart-item-list');
+    const displayTotal = document.querySelector('.total-value');
+    const currentState = getCartState(); 
+    
+    if (!cartList || !displayTotal) return;
 
-    cartState.forEach(item => {
-        totalItems += item.quantity;
-        totalPrice += item.subtotal;
-        const nodeHTML = `
-            <li class="cart-item-node" data-cart-item-id="${item.idNode}">
-              <span class="item-name">${item.name}</span>
-              <div class="item-quantity-controls">
-                <button type="button" class="btn-decrease">-</button>
-                <output class="item-quantity">${item.quantity}</output>
-                <button type="button" class="btn-increase">+</button>
-              </div>
-              <data class="item-subtotal" value="${item.subtotal}">$${item.subtotal}</data>
-              <button type="button" class="btn-remove-node">Eliminar</button>
-            </li>
+    cartList.innerHTML = '';
+    let transactionTotal = 0; 
+
+    currentState.forEach(item => {
+        const nodeSubtotal = item.price * item.quantity;
+        transactionTotal += nodeSubtotal;
+
+        const li = document.createElement('li');
+        li.className = 'cart-item-node';
+        
+        // Inyección de la topología de control
+        li.innerHTML = `
+            <div class="cart-item-info">
+                <strong>${item.name}</strong>
+                <span>$${item.price} c/u</span>
+            </div>
+            <div class="cart-item-controls">
+                <button type="button" class="btn-qty-minus" data-id="${item.id}">-</button>
+                <span class="cart-qty-display">${item.quantity}</span>
+                <button type="button" class="btn-qty-plus" data-id="${item.id}">+</button>
+            </div>
+            <div class="cart-item-total">
+                <strong>$${nodeSubtotal}</strong>
+                <button type="button" class="btn-remove-item" data-id="${item.id}" aria-label="Eliminar nodo">x</button>
+            </div>
         `;
-        cartListContainer.insertAdjacentHTML('beforeend', nodeHTML);
+        cartList.appendChild(li);
     });
 
-    document.getElementById('cart-counter').textContent = totalItems;
-    const totalOutput = document.querySelector('.cart-total-value');
-    totalOutput.value = totalPrice;
-    totalOutput.textContent = `$${totalPrice}`;
+    displayTotal.textContent = `$${transactionTotal.toFixed(2)}`;
 
-    const checkoutBtn = document.querySelector('.btn-checkout');
-    if (cartState.length === 0) checkoutBtn.setAttribute('disabled', 'true');
-    else checkoutBtn.removeAttribute('disabled');
-
-    // === NUEVO: PERSISTENCIA DE ESTADO ===
-    // Convertimos la estructura discreta a JSON y la escribimos en disco ($O(1)$)
-    localStorage.setItem('takeaway_cart_state', JSON.stringify(cartState));
+    const btnCheckout = document.querySelector('.btn-checkout');
+    if (btnCheckout && currentState.length === 0) {
+        btnCheckout.setAttribute('disabled', 'true');
+    }
+    
+    evaluateSystemLock();
 }
 
-// ==========================================
-// MÓDULO: CIERRE DE TRANSACCIÓN (Checkout)
-// ==========================================
-
-// 1. Identificamos el nodo de salida (El gatillo)
-const checkoutButtonObserver = document.querySelector('.btn-checkout');
-
-// 2. Interceptamos la señal de confirmación
-checkoutButtonObserver.addEventListener('click', function() {
+function evaluateSystemLock() {
+    const btnCheckout = document.querySelector('.btn-checkout');
+    if (!btnCheckout) return;
     
-    // Guard Clause (Cláusula de seguridad): Si el sistema está vacío, abortamos.
-    // Aunque el botón esté 'disabled' en el HTML, esta es una validación de backend.
-    if (cartState.length === 0) return;
+    const currentState = getCartState();
+    if (currentState.length > 0 && isNameValid) {
+        btnCheckout.removeAttribute('disabled');
+    } else {
+        btnCheckout.setAttribute('disabled', 'true');
+    }
+}
 
-    // 3. Compilación del Payload (Serialización de Estructuras)
-    // Transformamos la Lista Dinámica en una cadena de texto estructurada.
-    let orderPayload = "Hola, me gustaría confirmar el siguiente pedido:\n\n";
-
-    // Iteramos sobre las variables discretas del arreglo para construir el detalle
-    cartState.forEach(item => {
-        orderPayload += `▪ ${item.quantity}x ${item.name} ($${item.subtotal})\n`;
-    });
-
-    // Calculamos la sumatoria final basándonos en la Única Fuente de Verdad
-    const grandTotal = cartState.reduce((acc, item) => acc + item.subtotal, 0);
-    orderPayload += `\n*Total a Pagar: $${grandTotal}*`;
-
-    // 4. Interfaz de Comunicación (API Gateway)
-    // Definimos el número de destino (Asegúrate de incluir el código de país, ej: 54 para Argentina)
-    const phoneNumber = "5493718502710"; 
-    
-    // Codificamos el texto para que los espacios y saltos de línea sean válidos en una URL (URI Encoding)
-    const encodedPayload = encodeURIComponent(orderPayload);
-    
-    // Construimos la petición GET hacia el límite del sistema externo
-    const gatewayURL = `https://wa.me/${phoneNumber}?text=${encodedPayload}`;
-
-    // 5. Ejecución: Abrimos la conexión en una nueva pestaña
-    window.open(gatewayURL, '_blank');
-
-    // 6. Purga del Sistema (Opcional pero recomendado)
-    // Una vez que la transacción abandona nuestro TPS, destruimos el estado local
-    // para preparar la máquina para un nuevo Actor.
-    cartState = [];
-    localStorage.removeItem('takeaway_cart_state');
-    syncCartDOM();
-});
+// ARRANQUE
+initializeSystem();
