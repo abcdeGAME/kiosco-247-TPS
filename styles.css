@@ -39,10 +39,17 @@
     --espaciado-base: 1rem; /* 16px por defecto */
 
     --radio-borde: 8px;
-
 }
 
-
+/* Banner de Sistema de Prueba */
+.test-system-banner {
+    background-color: var(--color-peligro);
+    color: white;
+    text-align: center;
+    padding: 0.5rem;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
 
 /* Tipografía y Fondo Base */
 
