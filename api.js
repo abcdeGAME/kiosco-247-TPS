@@ -1,9 +1,13 @@
 // Archivo: api.js
-// Exportamos la función para que sea accesible desde otros dominios
 export async function fetchCatalog() {
-    const response = await fetch('catalogo.json');
-    if (!response.ok) {
-        throw new Error(`Fallo en la red: Error ${response.status}`);
+    try {
+        const response = await fetch('./catalogo.json');
+        if (!response.ok) {
+            throw new Error(`No se pudo cargar el catálogo (Error ${response.status}: ${response.statusText})`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error en fetchCatalog:", error);
+        throw error;
     }
-    return await response.json();
 }

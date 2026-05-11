@@ -298,6 +298,12 @@ function syncCartDOM() {
 
     displayTotal.textContent = `$${transactionTotal.toFixed(2)}`;
 
+    const cartCounter = document.getElementById('cart-counter');
+    if (cartCounter) {
+        const totalItems = currentState.reduce((acc, item) => acc + item.quantity, 0);
+        cartCounter.textContent = totalItems;
+    }
+
     const btnCheckout = document.querySelector('.btn-checkout');
     if (btnCheckout && currentState.length === 0) {
         btnCheckout.setAttribute('disabled', 'true');
@@ -313,13 +319,6 @@ function evaluateSystemLock() {
     const currentState = getCartState();
     if (currentState.length > 0 && isNameValid) {
         btnCheckout.removeAttribute('disabled');
-    } else {
-        btnCheckout.setAttribute('disabled', 'true');
-    }
-}
-
-// ARRANQUE
-initializeSystem();kout.removeAttribute('disabled');
     } else {
         btnCheckout.setAttribute('disabled', 'true');
     }
